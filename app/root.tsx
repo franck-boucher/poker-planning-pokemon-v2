@@ -1,4 +1,6 @@
+import * as React from "react";
 import {
+  data,
   isRouteErrorResponse,
   Links,
   Meta,
@@ -6,9 +8,13 @@ import {
   Scripts,
   ScrollRestoration,
 } from "react-router";
+import { ConvexProvider, ConvexReactClient } from "convex/react";
+import { ThemeProvider } from "next-themes";
 
 import type { Route } from "./+types/root";
 import "./app.css";
+import { getOrCreateUser } from "./lib/userSession.server";
+import { AppLayout } from "./components/AppLayout";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -23,6 +29,21 @@ export const links: Route.LinksFunction = () => [
   },
 ];
 
+export function meta({}: Route.MetaArgs) {
+  return [
+    { title: "Poker Planning Pokemon" },
+    { name: "description", content: "Welcome to React Router!" },
+  ];
+}
+
+export async function loader({ request }: Route.LoaderArgs) {
+  const { user, cookie } = await getOrCreateUser(request);
+  return data(
+    { user },
+    cookie ? { headers: { "Set-Cookie": cookie } } : undefined,
+  );
+}
+
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
@@ -33,7 +54,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
-        {children}
+        <AppLayout>{children}</AppLayout>
         <ScrollRestoration />
         <Scripts />
       </body>
@@ -42,7 +63,16 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  return <Outlet />;
+  const [convex] = React.useState(
+    () => new ConvexReactClient(import.meta.env.VITE_CONVEX_URL as string),
+  );
+  return (
+    <ThemeProvider attribute="class">
+      <ConvexProvider client={convex}>
+        <Outlet />
+      </ConvexProvider>
+    </ThemeProvider>
+  );
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
