@@ -5,7 +5,7 @@
 
 html,
 body {
-  @apply min-h-max h-full;
+  @apply min-h-screen;
   @media (prefers-color-scheme: dark) {
     color-scheme: dark;
   }
