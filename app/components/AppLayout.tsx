@@ -1,4 +1,4 @@
-import { Link } from "react-router";
+import { Link, useLocation } from "react-router";
 import { AnimateIcon } from "./animate-ui/icons/icon";
 import { LayoutDashboard } from "./animate-ui/icons/layout-dashboard";
 import { Button } from "./animate-ui/components/buttons/button";
@@ -14,6 +14,7 @@ import {
 
 export const AppLayout = ({ children }: { children: React.ReactNode }) => {
   const url = useUrl();
+  const location = useLocation();
   return (
     <div className="max-w-5xl mx-auto p-4 sm:p-8 transition-all flex flex-col gap-4 sm:gap-8 min-h-screen">
       <div className="flex gap-4 items-center justify-between">
@@ -29,19 +30,21 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
         </Link>
 
         <div className="flex items-center gap-2">
-          <Tooltip>
-            <TooltipTrigger
-              render={
-                <CopyButton
-                  Icon={LinkIcon}
-                  content={url}
-                  variant="ghost"
-                  className="size-6 sm:size-8 [&_svg]:size-4! sm:[&_svg]:size-6! transition-all [&_svg]:transition-all"
-                />
-              }
-            />
-            <TooltipPanel side="left">Copier l'URL</TooltipPanel>
-          </Tooltip>
+          {location.pathname.startsWith("/sizings/") && (
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <CopyButton
+                    Icon={LinkIcon}
+                    content={url}
+                    variant="ghost"
+                    className="size-6 sm:size-8 [&_svg]:size-4! sm:[&_svg]:size-6! transition-all [&_svg]:transition-all"
+                  />
+                }
+              />
+              <TooltipPanel side="left">Copier l'URL</TooltipPanel>
+            </Tooltip>
+          )}
 
           <Button
             variant="ghost"
@@ -56,6 +59,7 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
               <Github />
             </Link>
           </Button>
+
           <ThemeSwitch
             variant="ghost"
             size="icon"
