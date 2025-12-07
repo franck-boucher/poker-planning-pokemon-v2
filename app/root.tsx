@@ -49,7 +49,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
-        <AppLayout>{children}</AppLayout>
+        <ThemeProvider attribute="class">
+          <AppLayout>{children}</AppLayout>
+        </ThemeProvider>
         <ScrollRestoration />
         <Scripts />
         {import.meta.env.PROD && <Analytics />}
@@ -63,11 +65,9 @@ export default function App() {
     () => new ConvexReactClient(import.meta.env.VITE_CONVEX_URL as string),
   );
   return (
-    <ThemeProvider attribute="class">
-      <ConvexProvider client={convex}>
-        <Outlet />
-      </ConvexProvider>
-    </ThemeProvider>
+    <ConvexProvider client={convex}>
+      <Outlet />
+    </ConvexProvider>
   );
 }
 
