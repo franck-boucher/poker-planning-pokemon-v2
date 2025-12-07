@@ -9,6 +9,7 @@
     "typecheck": "react-router typegen && tsc"
   },
   "dependencies": {
+    "@base-ui-components/react": "^1.0.0-rc.0",
     "@convex-dev/presence": "^0.3.0",
     "@radix-ui/react-slot": "^1.2.4",
     "@react-router/node": "7.10.1",

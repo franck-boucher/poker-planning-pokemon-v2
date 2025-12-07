@@ -35,6 +35,10 @@ export function meta({}: Route.MetaArgs) {
   ];
 }
 
+export function loader({ request }: Route.LoaderArgs) {
+  return { url: request.url };
+}
+
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
@@ -48,7 +52,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <AppLayout>{children}</AppLayout>
         <ScrollRestoration />
         <Scripts />
-        <Analytics />
+        {import.meta.env.PROD && <Analytics />}
       </body>
     </html>
   );
