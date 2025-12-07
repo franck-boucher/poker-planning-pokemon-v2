@@ -1,7 +1,6 @@
 import * as React from "react";
 import { Analytics } from "@vercel/analytics/react";
 import {
-  data,
   isRouteErrorResponse,
   Links,
   Meta,
@@ -14,7 +13,6 @@ import { ThemeProvider } from "next-themes";
 
 import type { Route } from "./+types/root";
 import "./app.css";
-import { getOrCreateUser } from "./lib/userSession.server";
 import { AppLayout } from "./components/AppLayout";
 
 export const links: Route.LinksFunction = () => [
@@ -35,14 +33,6 @@ export function meta({}: Route.MetaArgs) {
     { title: "Poker Planning Pokemon" },
     { name: "description", content: "Welcome to React Router!" },
   ];
-}
-
-export async function loader({ request }: Route.LoaderArgs) {
-  const { user, cookie } = await getOrCreateUser(request);
-  return data(
-    { user },
-    cookie ? { headers: { "Set-Cookie": cookie } } : undefined,
-  );
 }
 
 export function Layout({ children }: { children: React.ReactNode }) {

@@ -1,10 +1,9 @@
-import { useUser } from "~/components/useUser";
 import type { Route } from "./+types/sizing";
 import usePresence from "@convex-dev/presence/react";
 import { api } from "convex/_generated/api";
 import { convexClient } from "~/lib/convexClient.server";
-import { redirect } from "react-router";
-import { requireUserId } from "~/lib/userSession.server";
+import { data, redirect } from "react-router";
+import { getOrCreateUser } from "~/lib/userSession.server";
 import { cn, getPokemonSpriteUrl, pointCards, randomNumber } from "~/lib/utils";
 import { useMutation, useQuery } from "convex/react";
 import { UnitCard } from "~/components/UnitCard";
@@ -16,28 +15,32 @@ import { Fade } from "~/components/animate-ui/primitives/effects/fade";
 import { Zoom } from "~/components/animate-ui/primitives/effects/zoom";
 
 export async function loader({ request, params }: Route.LoaderArgs) {
-  const userId = await requireUserId(request);
+  const { user, cookie } = await getOrCreateUser(request);
 
   const sizing = await convexClient.query(api.sizings.getById, {
     id: params.sizingId,
   });
-  if (!sizing) throw redirect("/");
+  if (!sizing)
+    throw redirect(
+      "/",
+      cookie ? { headers: { "Set-Cookie": cookie } } : undefined,
+    );
 
   const participants = await convexClient.query(
     api.participants.getBySizingId,
     { sizingId: sizing._id },
   );
-  if (!participants.find((p) => p.userId === userId)) {
+  if (!participants.find((p) => p.userId === user._id)) {
     const shiny = randomNumber(1, 100) === 1;
     const unitNumber = randomNumber(1, 150);
     const unit = await convexClient.query(api.units.getByUserIdAndNumber, {
-      userId,
+      userId: user._id,
       number: unitNumber,
     });
     let unitId = unit?._id;
     if (!unitId) {
       unitId = await convexClient.mutation(api.units.create, {
-        userId,
+        userId: user._id,
         number: unitNumber,
         lvl: 5,
         shiny,
@@ -45,16 +48,23 @@ export async function loader({ request, params }: Route.LoaderArgs) {
     }
     await convexClient.mutation(api.participants.add, {
       sizingId: sizing._id,
-      userId,
+      userId: user._id,
       unit: unitId,
     });
   }
+  return data(
+    { userId: user._id },
+    cookie ? { headers: { "Set-Cookie": cookie } } : undefined,
+  );
 }
 
-export default function SizingPage({ params }: Route.ComponentProps) {
-  const user = useUser();
+export default function SizingPage({
+  loaderData,
+  params,
+}: Route.ComponentProps) {
+  const { userId } = loaderData;
   const sizing = useQuery(api.sizings.getById, { id: params.sizingId });
-  const presenceState = usePresence(api.presence, params.sizingId, user._id);
+  const presenceState = usePresence(api.presence, params.sizingId, userId);
   const revealAll = useMutation(api.sizings.revealAll);
   const hideAll = useMutation(api.sizings.hideAll);
   const clearVotes = useMutation(api.participants.clearVotesBySizingId);
@@ -94,6 +104,7 @@ export default function SizingPage({ params }: Route.ComponentProps) {
           {topRow.map((p) => (
             <Participant
               key={p.userId}
+              currentUserId={userId}
               userId={p.userId}
               sizingId={params.sizingId}
               top
@@ -110,6 +121,7 @@ export default function SizingPage({ params }: Route.ComponentProps) {
           {bottomRow.map((p) => (
             <Participant
               key={p.userId}
+              currentUserId={userId}
               userId={p.userId}
               sizingId={params.sizingId}
               bottom
@@ -124,7 +136,7 @@ export default function SizingPage({ params }: Route.ComponentProps) {
             <PointCard
               key={pointCard}
               pointCard={pointCard}
-              userId={user._id}
+              userId={userId}
               sizingId={params.sizingId}
             />
           ))}
@@ -134,7 +146,7 @@ export default function SizingPage({ params }: Route.ComponentProps) {
             <PointCard
               key={pointCard}
               pointCard={pointCard}
-              userId={user._id}
+              userId={userId}
               sizingId={params.sizingId}
             />
           ))}
@@ -151,13 +163,19 @@ const WaitingParticipants = () => (
 );
 
 interface ParticipantProps {
+  currentUserId: string;
   userId: string;
   sizingId: string;
   top?: boolean;
   bottom?: boolean;
 }
-const Participant = ({ userId, sizingId, top, bottom }: ParticipantProps) => {
-  const user = useUser();
+const Participant = ({
+  currentUserId,
+  userId,
+  sizingId,
+  top,
+  bottom,
+}: ParticipantProps) => {
   const sizing = useQuery(api.sizings.getById, { id: sizingId });
   const participant = useQuery(api.participants.getBySizingIdAndUserId, {
     userId,
@@ -184,7 +202,7 @@ const Participant = ({ userId, sizingId, top, bottom }: ParticipantProps) => {
         <ParticipantAvatar
           unitNumber={unit.number}
           unitLvl={unit.lvl}
-          current={user._id === userId}
+          current={currentUserId === userId}
         />
         {top && (
           <UnitCard disabled dashed={!participant.vote}>

@@ -5,11 +5,10 @@ import { AnimateIcon } from "~/components/animate-ui/icons/icon";
 import { Card } from "~/components/ui/card";
 import { getPokemonSpriteUrl, randomNumber } from "~/lib/utils";
 import type { Route } from "./+types/home";
-import { requireUserId } from "~/lib/userSession.server";
+import { getOrCreateUser } from "~/lib/userSession.server";
 import { convexClient } from "~/lib/convexClient.server";
 import { ArrowRight } from "~/components/animate-ui/icons/arrow-right";
 import { LoaderCircle } from "~/components/animate-ui/icons/loader-circle";
-import { Slide } from "~/components/animate-ui/primitives/effects/slide";
 import { Fade } from "~/components/animate-ui/primitives/effects/fade";
 import { UnitCard } from "~/components/UnitCard";
 
@@ -21,11 +20,14 @@ export async function loader() {
 }
 
 export async function action({ request }: Route.ActionArgs) {
-  const userId = await requireUserId(request);
+  const { user, cookie } = await getOrCreateUser(request);
   const sizingId = await convexClient.mutation(api.sizings.create, {
-    createdBy: userId,
+    createdBy: user._id,
   });
-  return redirect(`/sizings/${sizingId}`);
+  return redirect(
+    `/sizings/${sizingId}`,
+    cookie ? { headers: { "Set-Cookie": cookie } } : undefined,
+  );
 }
 
 export default function HomePage({ loaderData }: Route.ComponentProps) {
