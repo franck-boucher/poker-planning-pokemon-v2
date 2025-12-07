@@ -5,8 +5,7 @@
 
 html,
 body {
-  @apply bg-white dark:bg-gray-950;
-
+  @apply min-h-max h-full;
   @media (prefers-color-scheme: dark) {
     color-scheme: dark;
   }
@@ -206,9 +205,4 @@ body {
   [role="button"]:disabled {
     cursor: default;
   }
-}
-
-html,
-body {
-  @apply h-full;
 }

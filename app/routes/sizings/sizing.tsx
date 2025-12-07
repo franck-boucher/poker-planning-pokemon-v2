@@ -80,7 +80,7 @@ export default function SizingPage({
 
   if (!sizing || !presenceState) {
     return (
-      <Fade className="text-center text-4xl font-bold">
+      <Fade className="text-center text-2xl sm:text-4xl font-bold flex-1 items-center justify-center flex">
         <ShimmeringText text="Loading" />
       </Fade>
     );
@@ -97,9 +97,9 @@ export default function SizingPage({
       : onlineUsers;
 
   return (
-    <Slide className="flex flex-col gap-8">
+    <Slide className="flex flex-col gap-4 sm:gap-8">
       <div className="flex flex-col gap-4">
-        <div className="flex gap-8 justify-center transition-all h-[136px] sm:h-[152px]">
+        <div className="flex gap-4 sm:gap-8 justify-center transition-all h-[136px] sm:h-[152px]">
           {topRow.length === 0 && <WaitingParticipants />}
           {topRow.map((p) => (
             <Participant
@@ -116,7 +116,7 @@ export default function SizingPage({
             {sizing.revealed ? "Réinitialiser" : "Révéler"}
           </Button>
         </Card>
-        <div className="flex gap-8 justify-center transition-all h-[136px] sm:h-[152px]">
+        <div className="flex gap-4 sm:gap-8 justify-center transition-all h-[136px] sm:h-[152px]">
           {bottomRow.length === 0 && <WaitingParticipants />}
           {bottomRow.map((p) => (
             <Participant

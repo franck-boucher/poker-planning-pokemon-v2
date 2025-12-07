@@ -6,7 +6,7 @@ import { Github } from "lucide-react";
 import { ThemeSwitch } from "./ThemeSwitch";
 
 export const AppLayout = ({ children }: { children: React.ReactNode }) => (
-  <div className="max-w-5xl mx-auto p-4 sm:p-8 transition-all flex flex-col gap-4 sm:gap-8">
+  <div className="max-w-5xl mx-auto p-4 sm:p-8 transition-all flex flex-col gap-4 sm:gap-8 h-full">
     <div className="flex gap-4 items-center justify-between">
       <Link to="/">
         <AnimateIcon animateOnHover>
