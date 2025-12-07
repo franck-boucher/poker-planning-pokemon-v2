@@ -27,7 +27,7 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => (
           asChild
         >
           <Link
-            to="https://github.com/franck-boucher/poker-planning-pokemon"
+            to="https://github.com/franck-boucher/poker-planning-pokemon-v2"
             target="_blank"
           >
             <Github />
