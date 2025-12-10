@@ -1,4 +1,5 @@
 import { cn, getPokemonSpriteUrl } from "~/lib/utils";
+import { Sparkle } from "./animate-ui/icons/sparkle";
 
 interface ParticipantAvatarProps {
   unitNumber: number;
@@ -40,5 +41,15 @@ export const UnitAvatar = ({
     >
       Niv. {unitLvl}
     </span>
+    {shiny && (
+      <span
+        className={cn(
+          "text-xs text-foreground/80 px-1 absolute top-0 left-0",
+          current && "border-primary/60",
+        )}
+      >
+        <Sparkle animate="fill" className="text-yellow-300" />
+      </span>
+    )}
   </div>
 );
