@@ -5,7 +5,7 @@ import { v } from "convex/values";
 export const create = mutation({
   args: { createdBy: v.id("users") },
   handler: async (ctx, { createdBy }) => {
-    const id = await ctx.db.insert("sizings", { createdBy, revealed: false });
+    const id = await ctx.db.insert("sizings", { createdBy, state: "hidden" });
     return id;
   },
 });
@@ -20,13 +20,20 @@ export const getById = query({
 export const revealAll = mutation({
   args: { sizingId: v.id("sizings") },
   handler: async (ctx, { sizingId }) => {
-    await ctx.db.patch(sizingId, { revealed: true });
+    await ctx.db.patch(sizingId, { state: "revealed" });
+  },
+});
+
+export const startCountdown = mutation({
+  args: { sizingId: v.id("sizings") },
+  handler: async (ctx, { sizingId }) => {
+    await ctx.db.patch(sizingId, { state: "countdown" });
   },
 });
 
 export const hideAll = mutation({
   args: { sizingId: v.id("sizings") },
   handler: async (ctx, { sizingId }) => {
-    await ctx.db.patch(sizingId, { revealed: false });
+    await ctx.db.patch(sizingId, { state: "hidden" });
   },
 });

@@ -1,3 +1,4 @@
+import * as React from "react";
 import type { Route } from "./+types/sizing";
 import usePresence from "@convex-dev/presence/react";
 import { api } from "convex/_generated/api";
@@ -59,21 +60,47 @@ export async function loader({ request, params }: Route.LoaderArgs) {
   );
 }
 
+const countdownDuration = 3;
+
 export default function SizingPage({
   loaderData,
   params,
 }: Route.ComponentProps) {
   const { userId } = loaderData;
+  const [countDownValue, setCountDownValue] = React.useState(countdownDuration);
   const sizing = useQuery(api.sizings.getById, { id: params.sizingId });
   const presenceState = usePresence(api.presence, params.sizingId, userId);
+  const startCountdown = useMutation(api.sizings.startCountdown);
   const revealAll = useMutation(api.sizings.revealAll);
   const hideAll = useMutation(api.sizings.hideAll);
   const clearVotes = useMutation(api.participants.clearVotesBySizingId);
 
-  const toggleReveal = () => {
+  React.useEffect(() => {
+    if (sizing && sizing.state === "countdown") {
+      let value = countdownDuration;
+      const interval = setInterval(() => {
+        value -= 1;
+        setCountDownValue(value);
+        if (value <= 0) clearInterval(interval);
+      }, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [sizing]);
+
+  React.useEffect(() => {
+    if (sizing && sizing.state !== "countdown") {
+      setCountDownValue(countdownDuration);
+    }
+  }, [sizing]);
+
+  const toggleReveal = async () => {
     if (!sizing) return;
-    if (!sizing.revealed) revealAll({ sizingId: sizing._id });
-    else {
+    if (sizing.state === "hidden") {
+      await startCountdown({ sizingId: sizing._id });
+      setTimeout(() => {
+        revealAll({ sizingId: sizing._id });
+      }, 3000);
+    } else {
       clearVotes({ sizingId: sizing._id });
       hideAll({ sizingId: sizing._id });
     }
@@ -113,8 +140,15 @@ export default function SizingPage({
           ))}
         </div>
         <Card className="flex justify-center items-center">
-          <Button onClick={toggleReveal}>
-            {sizing.revealed ? "Réinitialiser" : "Révéler"}
+          <Button
+            onClick={toggleReveal}
+            disabled={sizing.state === "countdown"}
+          >
+            {sizing.state === "hidden"
+              ? "Révéler"
+              : sizing.state === "countdown" && countDownValue !== 0
+                ? countDownValue
+                : "Réinitialiser"}
           </Button>
         </Card>
         <div className="flex gap-4 sm:gap-8 justify-center transition-all h-[136px] sm:h-[152px]">
@@ -194,10 +228,12 @@ const Participant = ({
       <div className="flex flex-col gap-2 items-center">
         {bottom && (
           <UnitCard disabled dashed={!participant.vote}>
-            {!!participant.vote && !sizing.revealed && (
+            {!!participant.vote && sizing.state !== "revealed" && (
               <img src="/pokeball.png" />
             )}
-            {!!participant.vote && sizing.revealed && participant.vote}
+            {!!participant.vote &&
+              sizing.state === "revealed" &&
+              participant.vote}
           </UnitCard>
         )}
         <UnitAvatar
@@ -208,10 +244,12 @@ const Participant = ({
         />
         {top && (
           <UnitCard disabled dashed={!participant.vote}>
-            {!!participant.vote && !sizing.revealed && (
+            {!!participant.vote && sizing.state !== "revealed" && (
               <img src="/pokeball.png" />
             )}
-            {!!participant.vote && sizing.revealed && participant.vote}
+            {!!participant.vote &&
+              sizing.state === "revealed" &&
+              participant.vote}
           </UnitCard>
         )}
       </div>
@@ -244,7 +282,7 @@ const PointCard = ({ pointCard, userId, sizingId }: PointCardProps) => {
           });
         }
       }}
-      disabled={sizing?.revealed}
+      disabled={sizing?.state === "revealed"}
     >
       {pointCard}
     </UnitCard>

@@ -6,7 +6,11 @@ export default defineSchema({
 
   sizings: defineTable({
     createdBy: v.id("users"),
-    revealed: v.boolean(),
+    state: v.union(
+      v.literal("hidden"),
+      v.literal("revealed"),
+      v.literal("countdown"),
+    ),
   }),
 
   units: defineTable({
