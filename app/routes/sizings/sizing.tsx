@@ -4,7 +4,7 @@ import { api } from "convex/_generated/api";
 import { convexClient } from "~/lib/convexClient.server";
 import { data, redirect } from "react-router";
 import { getOrCreateUser } from "~/lib/userSession.server";
-import { cn, getPokemonSpriteUrl, pointCards, randomNumber } from "~/lib/utils";
+import { pointCards, randomNumber } from "~/lib/utils";
 import { useMutation, useQuery } from "convex/react";
 import { UnitCard } from "~/components/UnitCard";
 import { Card } from "~/components/ui/card";
@@ -13,6 +13,7 @@ import { Slide } from "~/components/animate-ui/primitives/effects/slide";
 import { ShimmeringText } from "~/components/animate-ui/primitives/texts/shimmering";
 import { Fade } from "~/components/animate-ui/primitives/effects/fade";
 import { Zoom } from "~/components/animate-ui/primitives/effects/zoom";
+import { UnitAvatar } from "~/components/UnitAvatar";
 
 export async function loader({ request, params }: Route.LoaderArgs) {
   const { user, cookie } = await getOrCreateUser(request);
@@ -199,9 +200,10 @@ const Participant = ({
             {!!participant.vote && sizing.revealed && participant.vote}
           </UnitCard>
         )}
-        <ParticipantAvatar
+        <UnitAvatar
           unitNumber={unit.number}
           unitLvl={unit.lvl}
+          shiny={unit.shiny}
           current={currentUserId === userId}
         />
         {top && (
@@ -216,47 +218,6 @@ const Participant = ({
     </Zoom>
   );
 };
-
-interface ParticipantAvatarProps {
-  unitNumber: number;
-  unitLvl: number;
-  current?: boolean;
-  withUnitNumber?: boolean;
-}
-const ParticipantAvatar = ({
-  unitNumber,
-  unitLvl,
-  current,
-  withUnitNumber,
-}: ParticipantAvatarProps) => (
-  <div className="size-16 sm:size-20 relative transition-all">
-    <img
-      src={getPokemonSpriteUrl(unitNumber)}
-      className={cn(
-        "rounded-full border p-1 bg-card",
-        current && "border-primary/60",
-      )}
-    />
-    {withUnitNumber && (
-      <span
-        className={cn(
-          "text-xs text-foreground/80 border px-1 absolute right-0 top-0 rounded-sm bg-card",
-          current && "border-primary/60",
-        )}
-      >
-        #{unitNumber}
-      </span>
-    )}
-    <span
-      className={cn(
-        "text-xs text-foreground/80 border px-1 absolute bottom-0 right-0 rounded-sm bg-card",
-        current && "border-primary/60",
-      )}
-    >
-      Niv. {unitLvl}
-    </span>
-  </div>
-);
 
 interface PointCardProps {
   pointCard: string;

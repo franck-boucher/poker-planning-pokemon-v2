@@ -14,6 +14,7 @@ import { ThemeProvider } from "next-themes";
 import type { Route } from "./+types/root";
 import "./app.css";
 import { AppLayout } from "./components/AppLayout";
+import { getUserId } from "./lib/userSession.server";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -35,13 +36,14 @@ export function meta({}: Route.MetaArgs) {
   ];
 }
 
-export function loader({ request }: Route.LoaderArgs) {
-  return { url: request.url };
+export async function loader({ request }: Route.LoaderArgs) {
+  const userId = await getUserId(request);
+  return { url: request.url, userId };
 }
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -49,9 +51,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
-        <ThemeProvider attribute="class">
-          <AppLayout>{children}</AppLayout>
-        </ThemeProvider>
+        {children}
         <ScrollRestoration />
         <Scripts />
         {import.meta.env.PROD && <Analytics />}
@@ -66,7 +66,11 @@ export default function App() {
   );
   return (
     <ConvexProvider client={convex}>
-      <Outlet />
+      <ThemeProvider attribute="class">
+        <AppLayout>
+          <Outlet />
+        </AppLayout>
+      </ThemeProvider>
     </ConvexProvider>
   );
 }

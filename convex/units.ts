@@ -32,3 +32,15 @@ export const getById = query({
     return await ctx.db.get(id);
   },
 });
+
+export const getAllByUserId = query({
+  args: { userId: v.id("users") },
+  handler: async (ctx, { userId }) => {
+    return (
+      await ctx.db
+        .query("units")
+        .withIndex("by_userId", (q) => q.eq("userId", userId))
+        .collect()
+    ).sort((a, b) => a.number - b.number);
+  },
+});

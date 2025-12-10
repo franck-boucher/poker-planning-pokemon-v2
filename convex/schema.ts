@@ -14,7 +14,9 @@ export default defineSchema({
     number: v.number(),
     lvl: v.number(),
     shiny: v.boolean(),
-  }).index("by_userId_and_number", ["userId", "number"]),
+  })
+    .index("by_userId", ["userId"])
+    .index("by_userId_and_number", ["userId", "number"]),
 
   participants: defineTable({
     sizingId: v.id("sizings"),
