@@ -47,6 +47,9 @@ export async function loader({ request, params }: Route.LoaderArgs) {
         lvl: 5,
         shiny,
       });
+    } else {
+      const amount = randomNumber(1, 5);
+      await convexClient.mutation(api.units.addLvl, { unitId, amount });
     }
     await convexClient.mutation(api.participants.add, {
       sizingId: sizing._id,

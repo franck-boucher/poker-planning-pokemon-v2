@@ -44,3 +44,14 @@ export const getAllByUserId = query({
     ).sort((a, b) => a.number - b.number);
   },
 });
+
+export const addLvl = mutation({
+  args: { unitId: v.id("units"), amount: v.number() },
+  handler: async (ctx, { unitId, amount }) => {
+    const unit = await ctx.db.get(unitId);
+    if (!unit) throw new Error("Unit not found");
+    const newLvl = unit.lvl + amount;
+    await ctx.db.patch(unitId, { lvl: newLvl });
+    return newLvl;
+  },
+});
