@@ -117,15 +117,16 @@ export default function SizingPage({
     );
   }
 
-  const onlineUsers = presenceState.filter((p) => p.online);
-  const topRow =
-    onlineUsers.length > 1
-      ? onlineUsers.slice(0, Math.ceil(onlineUsers.length / 2))
-      : [];
-  const bottomRow =
-    onlineUsers.length > 1
-      ? onlineUsers.slice(Math.ceil(onlineUsers.length / 2), onlineUsers.length)
-      : onlineUsers;
+  const userPresence = presenceState.find((p) => p.userId === userId);
+  const onlineOtherUsers = presenceState
+    .filter((p) => p.online)
+    .filter((p) => p.userId !== userId);
+  const upperHalf = Math.ceil((onlineOtherUsers.length + 1) / 2);
+  const topRow = onlineOtherUsers.slice(0, upperHalf);
+  const bottomRow = onlineOtherUsers.slice(upperHalf, onlineOtherUsers.length);
+  if (userPresence) {
+    bottomRow.splice(Math.floor(bottomRow.length / 2), 0, userPresence);
+  }
 
   return (
     <Slide className="flex flex-col gap-4 sm:gap-8">
