@@ -119,7 +119,12 @@ export default function SizingPage({
 
   const userPresence = presenceState.find((p) => p.userId === userId);
   const onlineOtherUsers = presenceState
-    .filter((p) => p.online)
+    .filter((p) => {
+      if (p.online) return true;
+      const lastActive = p.lastDisconnected;
+      const now = Date.now();
+      return lastActive && now - lastActive < 30 * 60 * 1000; // 30minutes threshold
+    })
     .filter((p) => p.userId !== userId);
   const upperHalf = Math.ceil((onlineOtherUsers.length + 1) / 2);
   const topRow = onlineOtherUsers.slice(0, upperHalf);
