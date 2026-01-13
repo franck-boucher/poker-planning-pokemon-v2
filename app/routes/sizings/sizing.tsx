@@ -16,6 +16,7 @@ import { Fade } from "~/components/animate-ui/primitives/effects/fade";
 import { Zoom } from "~/components/animate-ui/primitives/effects/zoom";
 import { UnitAvatar } from "~/components/UnitAvatar";
 import Confetti from "react-confetti";
+import { playFanfare } from "~/lib/audio";
 
 export async function loader({ request, params }: Route.LoaderArgs) {
   const { user, cookie } = await getOrCreateUser(request);
@@ -74,62 +75,33 @@ export default function SizingPage({
   const [countDownValue, setCountDownValue] = React.useState(countdownDuration);
   const sizing = useQuery(api.sizings.getById, { id: params.sizingId });
   const presenceState = usePresence(api.presence, params.sizingId, userId);
+  const participants = useQuery(api.participants.getBySizingId, {
+    sizingId: params.sizingId,
+  });
+
   const startCountdown = useMutation(api.sizings.startCountdown);
   const revealAll = useMutation(api.sizings.revealAll);
   const hideAll = useMutation(api.sizings.hideAll);
   const clearVotes = useMutation(api.participants.clearVotesBySizingId);
 
-  const participants = useQuery(api.participants.getBySizingId, {
-    sizingId: params.sizingId as any,
-  });
-
-  // ──────────────────────────────────────────────────────────────
-  // Détection du moment où on passe en "revealed" + check consensus
-  // ──────────────────────────────────────────────────────────────
-  const prevStateRef = React.useRef(sizing?.state);
-
   const [showVictoryConfetti, setShowVictoryConfetti] = React.useState(false);
 
+  const voteConsensus = (() => {
+    if (!participants || participants.length <= 1) return false;
+    const votes = participants.map((p) => p.vote).filter((v) => v != null);
+    if (votes.length <= 1) return false;
+    return votes.every((v) => v === votes[0]);
+  })();
+
+  const celebration = sizing?.state === "revealed" && voteConsensus;
+
   React.useEffect(() => {
-    if (!sizing || !participants) return;
-
-    const currentState = sizing.state;
-    const prevState = prevStateRef.current;
-
-    if (prevState !== "revealed" && currentState === "revealed") {
-      if (participants.length === 0) return;
-
-      const votes = participants
-        .map((p) => p.vote)
-        .filter((v): v is string => v != null);
-
-      if (votes.length === 0) {
-        return;
-      }
-
-      const allSame = votes.every((v) => v === votes[0]);
-
-      if (allSame) {
-        const audio = new Audio(
-          "https://www.myinstants.com/media/sounds/06-caught-a-pokemon.mp3",
-        );
-
-        audio.volume = 0.5;
-
-        audio.play().catch((e) => console.log("Autoplay bloqué :", e));
-
-        setShowVictoryConfetti(true);
-
-        // Reset after 9 secondes
-        setTimeout(() => {
-          setShowVictoryConfetti(false);
-          audio.pause();
-        }, 9000);
-      }
+    if (celebration) {
+      playFanfare();
+      setShowVictoryConfetti(true);
+      setTimeout(() => setShowVictoryConfetti(false), 9000);
     }
-
-    prevStateRef.current = currentState;
-  }, [sizing?.state, participants]);
+  }, [celebration]);
 
   React.useEffect(() => {
     if (sizing && sizing.state === "countdown") {
@@ -259,6 +231,7 @@ export default function SizingPage({
             numberOfPieces={250}
             gravity={0.15}
             recycle={false}
+            tweenDuration={2500}
           />
         </div>
       )}
