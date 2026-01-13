@@ -3,11 +3,13 @@ import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 
 export const getBySizingId = query({
-  args: { sizingId: v.id("sizings") },
+  args: { sizingId: v.string() },
   handler: async (ctx, { sizingId }) => {
     return await ctx.db
       .query("participants")
-      .withIndex("by_sizingId", (q) => q.eq("sizingId", sizingId))
+      .withIndex("by_sizingId", (q) =>
+        q.eq("sizingId", sizingId as Id<"sizings">),
+      )
       .collect();
   },
 });

@@ -15,6 +15,8 @@ import { ShimmeringText } from "~/components/animate-ui/primitives/texts/shimmer
 import { Fade } from "~/components/animate-ui/primitives/effects/fade";
 import { Zoom } from "~/components/animate-ui/primitives/effects/zoom";
 import { UnitAvatar } from "~/components/UnitAvatar";
+import Confetti from "react-confetti";
+import { playFanfare } from "~/lib/audio";
 
 export async function loader({ request, params }: Route.LoaderArgs) {
   const { user, cookie } = await getOrCreateUser(request);
@@ -73,10 +75,33 @@ export default function SizingPage({
   const [countDownValue, setCountDownValue] = React.useState(countdownDuration);
   const sizing = useQuery(api.sizings.getById, { id: params.sizingId });
   const presenceState = usePresence(api.presence, params.sizingId, userId);
+  const participants = useQuery(api.participants.getBySizingId, {
+    sizingId: params.sizingId,
+  });
+
   const startCountdown = useMutation(api.sizings.startCountdown);
   const revealAll = useMutation(api.sizings.revealAll);
   const hideAll = useMutation(api.sizings.hideAll);
   const clearVotes = useMutation(api.participants.clearVotesBySizingId);
+
+  const [showVictoryConfetti, setShowVictoryConfetti] = React.useState(false);
+
+  const voteConsensus = (() => {
+    if (!participants || participants.length <= 1) return false;
+    const votes = participants.map((p) => p.vote).filter((v) => v != null);
+    if (votes.length <= 1) return false;
+    return votes.every((v) => v === votes[0]);
+  })();
+
+  const celebration = sizing?.state === "revealed" && voteConsensus;
+
+  React.useEffect(() => {
+    if (celebration) {
+      playFanfare();
+      setShowVictoryConfetti(true);
+      setTimeout(() => setShowVictoryConfetti(false), 9000);
+    }
+  }, [celebration]);
 
   React.useEffect(() => {
     if (sizing && sizing.state === "countdown") {
@@ -196,6 +221,20 @@ export default function SizingPage({
           ))}
         </div>
       </div>
+
+      {showVictoryConfetti && (
+        <div className="fixed inset-0 pointer-events-none z-50">
+          <Confetti
+            width={window.innerWidth}
+            height={window.innerHeight}
+            colors={["#ff0000", "#2a75bb", "#ffde00", "#ffffff", "#000000"]} // palette pokéball + pikachu
+            numberOfPieces={250}
+            gravity={0.15}
+            recycle={false}
+            tweenDuration={2500}
+          />
+        </div>
+      )}
     </Slide>
   );
 }
