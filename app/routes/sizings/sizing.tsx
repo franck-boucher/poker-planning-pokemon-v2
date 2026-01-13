@@ -15,6 +15,7 @@ import { ShimmeringText } from "~/components/animate-ui/primitives/texts/shimmer
 import { Fade } from "~/components/animate-ui/primitives/effects/fade";
 import { Zoom } from "~/components/animate-ui/primitives/effects/zoom";
 import { UnitAvatar } from "~/components/UnitAvatar";
+import Confetti from "react-confetti";
 
 export async function loader({ request, params }: Route.LoaderArgs) {
   const { user, cookie } = await getOrCreateUser(request);
@@ -77,6 +78,58 @@ export default function SizingPage({
   const revealAll = useMutation(api.sizings.revealAll);
   const hideAll = useMutation(api.sizings.hideAll);
   const clearVotes = useMutation(api.participants.clearVotesBySizingId);
+
+  const participants = useQuery(api.participants.getBySizingId, {
+    sizingId: params.sizingId as any,
+  });
+
+  // ──────────────────────────────────────────────────────────────
+  // Détection du moment où on passe en "revealed" + check consensus
+  // ──────────────────────────────────────────────────────────────
+  const prevStateRef = React.useRef(sizing?.state);
+
+  const [showVictoryConfetti, setShowVictoryConfetti] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!sizing || !participants) return;
+
+    const currentState = sizing.state;
+    const prevState = prevStateRef.current;
+
+    if (prevState !== "revealed" && currentState === "revealed") {
+      if (participants.length === 0) return;
+
+      const votes = participants
+        .map((p) => p.vote)
+        .filter((v): v is string => v != null);
+
+      if (votes.length === 0) {
+        return;
+      }
+
+      const allSame = votes.every((v) => v === votes[0]);
+
+      if (allSame) {
+        const audio = new Audio(
+          "https://www.myinstants.com/media/sounds/06-caught-a-pokemon.mp3",
+        );
+
+        audio.volume = 0.5;
+
+        audio.play().catch((e) => console.log("Autoplay bloqué :", e));
+
+        setShowVictoryConfetti(true);
+
+        // Reset after 9 secondes
+        setTimeout(() => {
+          setShowVictoryConfetti(false);
+          audio.pause();
+        }, 9000);
+      }
+    }
+
+    prevStateRef.current = currentState;
+  }, [sizing?.state, participants]);
 
   React.useEffect(() => {
     if (sizing && sizing.state === "countdown") {
@@ -196,6 +249,19 @@ export default function SizingPage({
           ))}
         </div>
       </div>
+
+      {showVictoryConfetti && (
+        <div className="fixed inset-0 pointer-events-none z-50">
+          <Confetti
+            width={window.innerWidth}
+            height={window.innerHeight}
+            colors={["#ff0000", "#2a75bb", "#ffde00", "#ffffff", "#000000"]} // palette pokéball + pikachu
+            numberOfPieces={250}
+            gravity={0.15}
+            recycle={false}
+          />
+        </div>
+      )}
     </Slide>
   );
 }
