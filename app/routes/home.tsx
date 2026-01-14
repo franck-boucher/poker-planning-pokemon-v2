@@ -13,9 +13,9 @@ import { Fade } from "~/components/animate-ui/primitives/effects/fade";
 import { UnitCard } from "~/components/UnitCard";
 
 export async function loader() {
-  const entity1 = randomNumber(1, 150);
-  const entity2 = randomNumber(1, 150);
-  const entity3 = randomNumber(1, 150);
+  const entity1 = randomNumber(1, 151);
+  const entity2 = randomNumber(1, 151);
+  const entity3 = randomNumber(1, 151);
   return { entity1, entity2, entity3 };
 }
 

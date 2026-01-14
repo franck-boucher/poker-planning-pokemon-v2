@@ -36,7 +36,7 @@ export async function loader({ request, params }: Route.LoaderArgs) {
   );
   if (!participants.find((p) => p.userId === user._id)) {
     const shiny = randomNumber(1, 100) === 1;
-    const unitNumber = randomNumber(1, 150);
+    const unitNumber = randomNumber(1, 151);
     const unit = await convexClient.query(api.units.getByUserIdAndNumber, {
       userId: user._id,
       number: unitNumber,
