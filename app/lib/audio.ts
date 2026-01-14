@@ -1,4 +1,4 @@
-const DEFAULT_VOLUME = 0.5;
+const DEFAULT_VOLUME = 0.3;
 
 export const playFanfare = async () => {
   const audio = new Audio(
